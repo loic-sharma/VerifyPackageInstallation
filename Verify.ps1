@@ -4,10 +4,10 @@ $sources = @{
 
     Packages      = @(
       @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-      @{ PackageId = "Azure.Storage.Blobs"; PackageVersion = "12.2.0"; } # Author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+      @{ PackageId = "Azure.Storage.Blobs"; PackageVersion = "12.9.0-beta.1"; } # Author signed + old repo cert
+      @{ PackageId = "Azure.Storage.Blobs"; PackageVersion = "12.2.0"; } # Expired MSFT author signed + old repo cert
       @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
     );
   };
@@ -33,8 +33,8 @@ $sources = @{
       # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
+      @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
+      @{ PackageId = "postsharp.patterns.common.redist"; PackageVersion = "6.3.6-preview"; } # Expired non-MSFT author signed + old repo cert
     )
   }
 }
