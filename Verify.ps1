@@ -48,37 +48,46 @@ $dotnetClients = @(
   @{ Name = "dotnet50"; Version = "5.0.103"; }
 )
 
-$nugetClients | % {
-  $clientName = $_
-  $nugetexe = ".\tools\$clientName.exe"
+@($true, $false) | % {
+  $mono = $_
 
-  $source.Packages | % {
-    $id = $_.PackageId
-    $version = $_.PackageVersion
+  $nugetClients | % {
+    $clientName = $_
+    $nugetexe = ".\tools\$clientName.exe"
 
-    rmdir "$($env:UserProfile)\.nuget\packages\$id" -Force -Recurse -ErrorAction SilentlyContinue
-    rmdir .\packages -Force -Recurse -ErrorAction SilentlyContinue
+    if ($mono) {
+      $clientName = "mono-$clientName"
+      $nugetexe = "mono $nugetexe"
+    }
 
-    & $nugetexe locals http-cache -clear -Verbosity quiet
-
-    $packagesConfig = @"
+    $source.Packages | % {
+      $id = $_.PackageId
+      $version = $_.PackageVersion
+  
+      rmdir "$($env:UserProfile)\.nuget\packages\$id" -Force -Recurse -ErrorAction SilentlyContinue
+      rmdir .\packages -Force -Recurse -ErrorAction SilentlyContinue
+  
+      Invoke-Expression "$nugetexe locals http-cache -clear -Verbosity quiet"
+  
+      $packagesConfig = @"
 <?xml version="1.0" encoding="utf-8"?>
 <packages>
   <package id="$id" version="$version" targetFramework="net472" />
 </packages>
 "@
-
-    Set-Content -Path .\Legacy\packages.config -Value $packagesConfig
-
-    $identity = "$id.$version"
-    $restore = (& $nugetexe restore .\Legacy\Legacy.csproj -Source $source.PackageSource -PackagesDirectory packages -Verbosity detailed | Out-String).Trim()
-    $verify = (& $nugetexe verify -All -Verbosity detailed ".\packages\$identity\$identity.nupkg" | Out-String).Trim()
-
-    if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
-    if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
-
-    Set-Content -Path ".\output\$envName-$clientName-restore-$id-$version.txt" -Value $restore -Force 
-    Set-Content -Path ".\output\$envName-$clientName-verify-$id-$version.txt" -Value $verify -Force 
+  
+      Set-Content -Path .\Legacy\packages.config -Value $packagesConfig
+  
+      $identity = "$id.$version"
+      $restore = (Invoke-Expression "$nugetexe restore .\Legacy\Legacy.csproj -Source $($source.PackageSource) -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
+      $verify = (Invoke-Expression "$nugetexe verify -All -Verbosity detailed "".\packages\$identity\$identity.nupkg""" | Out-String).Trim()
+  
+      if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
+      if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
+  
+      Set-Content -Path ".\output\$envName-$clientName-restore-$id-$version.txt" -Value $restore -Force 
+      Set-Content -Path ".\output\$envName-$clientName-verify-$id-$version.txt" -Value $verify -Force 
+    }
   }
 }
 
