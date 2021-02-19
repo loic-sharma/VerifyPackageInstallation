@@ -1,58 +1,59 @@
-function Clean-PackageInstallation {
-    param (
-        $PackageId
-    )
-    
-    dotnet nuget locals -c http-cache
-
-    rmdir "$($env:UserProfile)\.nuget\packages\$PackageId" -Force -Recurse
-
-    git clean -Xfd
-
-    # .\nuget46.exe restore .\repotest.csproj -Source https://apidev.nugettest.org/v3/index.json
-}
-
-function Verify-PackageInstallation {
-    param (
-        $Source,
-        $PackageId,
-        $PackageVersion
-    )
-    
-
-
-}
-
 $sources = @{
-    DEV = @{
-        PackageSource = "https://apidev.nugettest.org/v3/index.json";
+  DEV  = @{
+    PackageSource = "https://apidev.nugettest.org/v3/index.json";
 
-        Packages = @(
-            @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
-            @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-            @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
-            @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-            @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
-            @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
-        );
-    };
+    Packages      = @(
+      @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+      @{ PackageId = "Azure.Storage.Blobs"; PackageVersion = "12.2.0"; } # Author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
+    );
+  };
 
-    INT = @{
+  INT  = @{
+    PackageSource = "https://apiint.nugettest.org/v3/index.json";
 
-    };
+    Packages      = @(
+      # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
+    )
+  };
 
-    PROD = @{
+  PROD = @{
+    PackageSource = "https://api.nuget.org/v3/index.json";
 
-    }
+    Packages      = @(
+      # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
+    )
+  }
 }
 
+$envName = "DEV"
 $source = $sources.DEV
 
-$nugetexe = ".\tools\nuget464.exe"
+$nugetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581")
 
-$source.Packages | %{
-    rmdir "$($env:UserProfile)\.nuget\packages\$($_.PackageId)" -Force -Recurse
-    rmdir .\packages -Force -Recurse
+$nugetClients | % {
+  $clientName = $_
+  $nugetexe = ".\tools\$clientName.exe"
+
+  $source.Packages | % {
+    rmdir "$($env:UserProfile)\.nuget\packages\$($_.PackageId)" -Force -Recurse -ErrorAction SilentlyContinue
+    rmdir .\packages -Force -Recurse -ErrorAction SilentlyContinue
 
     & $nugetexe locals http-cache -clear -Verbosity quiet
 
@@ -70,13 +71,10 @@ $source.Packages | %{
     $verify = (& $nugetexe verify -All -Verbosity detailed ".\packages\$identity\$identity.nupkg" | Out-String).Trim()
 
     if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
-    if (-not ($verify.Contains("Successfully verified package(s)."))) { throw "Unexpected verify output: $verify" }
+    if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
 
-    Set-Content -Path .\output\nuget464-restore.txt -Value $restore -Force 
-    Set-Content -Path .\output\nuget464-verify.txt -Value $verify -Force 
-
-    Write-Host $restore
-    Write-Host $verify
-
-    throw "Done"
+    Set-Content -Path ".\output\$envName-$clientName-restore-$($_.PackageId).txt" -Value $restore -Force 
+    Set-Content -Path ".\output\$envName-$clientName-verify-$($_.PackageId).txt" -Value $verify -Force 
+  }
 }
+
