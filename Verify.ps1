@@ -7,8 +7,7 @@ $sources = @{
       # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
       @{ PackageId = "Azure.Storage.Blobs"; PackageVersion = "12.2.0"; } # Author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
       @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
     );
   };
@@ -21,8 +20,7 @@ $sources = @{
       # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
     )
   };
@@ -35,8 +33,7 @@ $sources = @{
       # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked MSFT author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Revoked non-MSFT author signed + old repo cert
+      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
       # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
     )
   }
