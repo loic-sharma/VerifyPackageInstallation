@@ -1,70 +1,58 @@
 # Configs
 # =======
-$sources = @{
-  DEV  = @{
-    PackageSource = "https://apidev.nugettest.org/v3/index.json";
+function Get-Configs {
+  return @{
+    NuGetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581");
 
-    Packages      = @(
-      @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-      @{ PackageId = "Microsoft.Bcl.AsyncInterfaces"; PackageVersion = "6.0.0-preview.1.21102.12"; } # Author signed + old repo cert
-      @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2020.9.7-v0835112820328"; } # Expired MSFT author signed + old repo cert
-      @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
+    DotnetClients = @(
+      # @{ Name = "dotnet31"; Version = "3.1.302"; },
+      @{ Name = "dotnet50"; Version = "5.0.103"; }
     );
-  };
 
-  INT  = @{
-    PackageSource = "https://apiint.nugettest.org/v3/index.json";
+    Sources = @{
+      DEV  = @{
+        PackageSource = "https://apidev.nugettest.org/v3/index.json";
 
-    Packages      = @(
-      # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
-    )
-  };
+        Packages      = @(
+          @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+          @{ PackageId = "Microsoft.Bcl.AsyncInterfaces"; PackageVersion = "6.0.0-preview.1.21102.12"; } # Author signed + old repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2020.9.7-v0835112820328"; } # Expired MSFT author signed + old repo cert
+          @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
+        );
+      };
 
-  PROD = @{
-    PackageSource = "https://api.nuget.org/v3/index.json";
+      INT  = @{
+        PackageSource = "https://apiint.nugettest.org/v3/index.json";
 
-    Packages      = @(
-      # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
-      # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-      @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
-      @{ PackageId = "postsharp.patterns.common.redist"; PackageVersion = "6.3.6-preview"; } # Expired non-MSFT author signed + old repo cert
-    )
+        Packages      = @(
+          # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
+        )
+      };
+
+      PROD = @{
+        PackageSource = "https://api.nuget.org/v3/index.json";
+
+        Packages      = @(
+          # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
+          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+          @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
+          @{ PackageId = "postsharp.patterns.common.redist"; PackageVersion = "6.3.6-preview"; } # Expired non-MSFT author signed + old repo cert
+        )
+      }
+    }
   }
 }
 
-$nugetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581")
-$dotnetClients = @(
-  # @{ Name = "dotnet31"; Version = "3.1.302"; },
-  @{ Name = "dotnet50"; Version = "5.0.103"; }
-)
-
-# Test runners
-# ============
-function Test-NuGetExe {
-  param (
-    $TestName,
-    $NugetExe,
-    $AddTrustedSigners,
-    $Id,
-    $Version
-  )
-
-  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
-  Remove-Item "./packages" -Force -Recurse -ErrorAction SilentlyContinue
-
-  Invoke-Expression "$NugetExe locals http-cache -clear -Verbosity quiet"
-
-  if ($AddTrustedSigners) {
-    $trustedSigners = @"
+$trustedSigners = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <trustedSigners>
@@ -91,7 +79,26 @@ function Test-NuGetExe {
 </configuration>
 "@
 
+# Test runners
+# ============
+function Test-NuGetExe {
+  param (
+    $TestName,
+    $NugetExe,
+    $PackageSource,
+    $AddTrustedSigners,
+    $Id,
+    $Version
+  )
+
+  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item "./packages" -Force -Recurse -ErrorAction SilentlyContinue
+
+  Invoke-Expression "$NugetExe locals http-cache -clear -Verbosity quiet"
+
+  if ($AddTrustedSigners) {
     Set-Content -Path "nuget.config" -Value $trustedSigners
+    $TestName += "-trustedSigners"
   } elseif (Test-Path "nuget.config") {
     Remove-Item -Path "nuget.config"
   }
@@ -106,7 +113,7 @@ function Test-NuGetExe {
   Set-Content -Path "./Legacy/packages.config" -Value $packagesConfig
 
   $identity = "$Id.$Version"
-  $restore = (Invoke-Expression "$NugetExe restore ./Legacy/Legacy.csproj -Source $($source.PackageSource) -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
+  $restore = (Invoke-Expression "$NugetExe restore ./Legacy/Legacy.csproj -Source $PackageSource -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
   $verify = (Invoke-Expression "$NugetExe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
 
   if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
@@ -120,6 +127,7 @@ function Test-DotnetCli {
   param (
     $TestName,
     $SdkVersion,
+    $PackageSource,
     $AddTrustedSigners,
     $SupportsVerifyCommand,
     $Id,
@@ -132,6 +140,13 @@ function Test-DotnetCli {
   Remove-Item "./Sdk/obj" -Force -Recurse -ErrorAction SilentlyContinue
 
   dotnet nuget locals http-cache --clear | Out-Null
+
+  if ($AddTrustedSigners) {
+    Set-Content -Path "nuget.config" -Value $trustedSigners
+    $TestName += "-trustedSigners"
+  } elseif (Test-Path "nuget.config") {
+    Remove-Item -Path "nuget.config"
+  }
 
   # Lock down the SDK version
   dotnet new globaljson --sdk-version $SdkVersion --force | Out-Null
@@ -151,7 +166,7 @@ function Test-DotnetCli {
   Set-Content -Path "./Sdk/Sdk.csproj" -Value $project
 
   # Run restore.
-  $restore = (dotnet restore "./Sdk/Sdk.csproj" --source $source.PackageSource --verbosity normal | Out-String).Trim()
+  $restore = (dotnet restore "./Sdk/Sdk.csproj" --source $PackageSource --verbosity normal | Out-String).Trim()
 
   if (-not ($restore.Contains("Build succeeded."))) { throw "Unexpected restore output: $restore "}
 
@@ -163,66 +178,5 @@ function Test-DotnetCli {
     if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify "}
 
     Set-Content -Path "./output/$TestName-verify-$Id-$Version.txt" -Value $verify -Force
-  }
-}
-
-# Run test cases
-# ==============
-$envName = "DEV"
-$source = $sources.DEV
-
-Remove-Item "./output/*.txt"
-
-@($true, $false) | % {
-  $mono = $_
-
-  # Skip mono tests on Windows due to bugs.
-  if ($mono -and ($IsWindows -eq $null -or $IsWindows -eq $true)) {
-    return # We're in a script block so return is effectively "continue"
-  }
-
-  # Only run mono tests on macOS or Linux.
-  if (-not $mono -and $IsWindows -eq $false) {
-    return
-  }
-
-  @($true, $false) | % {
-    $addTrustedSigners = $_
-
-    $nugetClients | % {
-      $clientName = $_
-      $nugetexe = "./tools/$clientName.exe"
-
-      if ($mono) {
-        $clientName = "mono-$clientName"
-        $nugetexe = "mono $nugetexe"
-      }
-
-      if ($addTrustedSigners) {
-        $clientName = "$clientName-trustedSigners"
-      }
-
-      $source.Packages | % {
-        Test-NuGetExe `
-          -TestName "$envName-$clientName" `
-          -NugetExe $nugetexe `
-          -Id $_.PackageId `
-          -Version $_.PackageVersion
-      }
-    }
-  }
-}
-
-$dotnetClients | % {
-  $clientName = $_.Name
-  $sdkVersion = $_.Version
-
-  $source.Packages | % {
-    Test-DotnetCli `
-      -TestName "$envName-$clientName" `
-      -SdkVersion $sdkVersion `
-      -SupportsVerifyCommand ($clientName -ne "dotnet31") `
-      -Id $_.PackageId `
-      -Version $_.PackageVersion
   }
 }

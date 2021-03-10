@@ -15,13 +15,13 @@ cert-sync --user "C:\Users\sharm\Downloads\cacert.pem"
 Now run:
 
 ```ps1
-.\Verify.ps1
+.\windows.ps1
 ```
 
 For Docker, run:
 
 ```ps1
-docker run --rm -v D:\Code\VerifyPackageInstallation:/verify -w /verify mcr.microsoft.com/dotnet/sdk:5.0 pwsh Verify.ps1
+docker run --rm -v D:\Code\VerifyPackageInstallation:/verify -w /verify mcr.microsoft.com/dotnet/sdk:5.0 pwsh verify.ps1
 ```
 
 For more information on PowerShell in Docker, see [this](https://github.com/dotnet/dotnet-docker/issues/1069).
