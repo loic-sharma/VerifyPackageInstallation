@@ -1,3 +1,5 @@
+# Configs
+# =======
 $sources = @{
   DEV  = @{
     PackageSource = "https://apidev.nugettest.org/v3/index.json";
@@ -39,7 +41,30 @@ $sources = @{
   }
 }
 
-$trustedSigners = @"
+$nugetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581")
+$dotnetClients = @(
+  # @{ Name = "dotnet31"; Version = "3.1.302"; },
+  @{ Name = "dotnet50"; Version = "5.0.103"; }
+)
+
+# Test runners
+# ============
+function Test-NuGetExe {
+  param (
+    $TestName,
+    $NugetExe,
+    $AddTrustedSigners,
+    $Id,
+    $Version
+  )
+
+  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item "./packages" -Force -Recurse -ErrorAction SilentlyContinue
+
+  Invoke-Expression "$NugetExe locals http-cache -clear -Verbosity quiet"
+
+  if ($AddTrustedSigners) {
+    $trustedSigners = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
   <trustedSigners>
@@ -66,14 +91,85 @@ $trustedSigners = @"
 </configuration>
 "@
 
+    Set-Content -Path "nuget.config" -Value $trustedSigners
+  } elseif (Test-Path "nuget.config") {
+    Remove-Item -Path "nuget.config"
+  }
+
+  $packagesConfig = @"
+<?xml version="1.0" encoding="utf-8"?>
+<packages>
+  <package id="$Id" version="$Version" targetFramework="net472" />
+</packages>
+"@
+
+  Set-Content -Path "./Legacy/packages.config" -Value $packagesConfig
+
+  $identity = "$Id.$Version"
+  $restore = (Invoke-Expression "$NugetExe restore ./Legacy/Legacy.csproj -Source $($source.PackageSource) -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
+  $verify = (Invoke-Expression "$NugetExe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
+
+  if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
+  if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
+
+  Set-Content -Path "./output/$TestName-restore-$Id-$Version.txt" -Value $restore -Force
+  Set-Content -Path "./output/$TestName-verify-$Id-$Version.txt" -Value $verify -Force
+}
+
+function Test-DotnetCli {
+  param (
+    $TestName,
+    $SdkVersion,
+    $AddTrustedSigners,
+    $SupportsVerifyCommand,
+    $Id,
+    $Version
+  )
+
+  # Clean up any state.
+  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item "./Sdk/bin" -Force -Recurse -ErrorAction SilentlyContinue
+  Remove-Item "./Sdk/obj" -Force -Recurse -ErrorAction SilentlyContinue
+
+  dotnet nuget locals http-cache --clear | Out-Null
+
+  # Lock down the SDK version
+  dotnet new globaljson --sdk-version $SdkVersion --force | Out-Null
+
+  # Create a project to restore and verify.
+  $project = @"
+<Project Sdk="Microsoft.NET.Sdk">
+<PropertyGroup>
+  <TargetFramework>netstandard2.0</TargetFramework>
+</PropertyGroup>
+<ItemGroup>
+  <PackageReference Include="$Id" Version="$Version" />
+</ItemGroup>
+</Project>
+"@
+
+  Set-Content -Path "./Sdk/Sdk.csproj" -Value $project
+
+  # Run restore.
+  $restore = (dotnet restore "./Sdk/Sdk.csproj" --source $source.PackageSource --verbosity normal | Out-String).Trim()
+
+  if (-not ($restore.Contains("Build succeeded."))) { throw "Unexpected restore output: $restore "}
+
+  Set-Content -Path "./output/$TestName-restore-$Id-$Version.txt" -Value $restore -Force
+
+  if ($SupportsVerifyCommand) {
+    $verify = (dotnet nuget verify --verbosity normal "$($env:UserProfile)/.nuget/packages/$Id/$Version/$Id.$Version.nupkg" | Out-String).Trim()
+
+    if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify "}
+
+    Set-Content -Path "./output/$TestName-verify-$Id-$Version.txt" -Value $verify -Force
+  }
+}
+
+# Run test cases
+# ==============
 $envName = "DEV"
 $source = $sources.DEV
-
-$nugetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581")
-$dotnetClients = @(
-  @{ Name = "dotnet31"; Version = "3.1.302"; },
-  @{ Name = "dotnet50"; Version = "5.0.103"; }
-)
 
 Remove-Item "./output/*.txt"
 
@@ -81,18 +177,17 @@ Remove-Item "./output/*.txt"
   $mono = $_
 
   # Skip mono tests on Windows due to bugs.
-  if ($mono -and ($IsWindows -eq $null -or $IsWindows -eq $false)) {
+  if ($mono -and ($IsWindows -eq $null -or $IsWindows -eq $true)) {
     return # We're in a script block so return is effectively "continue"
+  }
+
+  # Only run mono tests on macOS or Linux.
+  if (-not $mono -and $IsWindows -eq $false) {
+    return
   }
 
   @($true, $false) | % {
     $addTrustedSigners = $_
-
-    if ($addTrustedSigners) {
-      Set-Content -Path "nuget.config" -Value $trustedSigners
-    } elseif (Test-Path "nuget.config") {
-      Remove-Item -Path "nuget.config"
-    }
 
     $nugetClients | % {
       $clientName = $_
@@ -108,32 +203,11 @@ Remove-Item "./output/*.txt"
       }
 
       $source.Packages | % {
-        $id = $_.PackageId
-        $version = $_.PackageVersion
-
-        rmdir "$($env:UserProfile)/.nuget/packages/$id" -Force -Recurse -ErrorAction SilentlyContinue
-        rmdir "./packages" -Force -Recurse -ErrorAction SilentlyContinue
-
-        Invoke-Expression "$nugetexe locals http-cache -clear -Verbosity quiet"
-
-        $packagesConfig = @"
-<?xml version="1.0" encoding="utf-8"?>
-<packages>
-  <package id="$id" version="$version" targetFramework="net472" />
-</packages>
-"@
-
-        Set-Content -Path "./Legacy/packages.config" -Value $packagesConfig
-
-        $identity = "$id.$version"
-        $restore = (Invoke-Expression "$nugetexe restore ./Legacy/Legacy.csproj -Source $($source.PackageSource) -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
-        $verify = (Invoke-Expression "$nugetexe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
-
-        if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
-        if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
-
-        Set-Content -Path "./output/$envName-$clientName-restore-$id-$version.txt" -Value $restore -Force
-        Set-Content -Path "./output/$envName-$clientName-verify-$id-$version.txt" -Value $verify -Force
+        Test-NuGetExe `
+          -TestName "$envName-$clientName" `
+          -NugetExe $nugetexe `
+          -Id $_.PackageId `
+          -Version $_.PackageVersion
       }
     }
   }
@@ -141,44 +215,14 @@ Remove-Item "./output/*.txt"
 
 $dotnetClients | % {
   $clientName = $_.Name
-
-  dotnet new globaljson --sdk-version $($_.Version) --force | Out-Null
+  $sdkVersion = $_.Version
 
   $source.Packages | % {
-    $id = $_.PackageId
-    $version = $_.PackageVersion
-
-    rmdir "$($env:UserProfile)/.nuget/packages/$id" -Force -Recurse -ErrorAction SilentlyContinue
-    rmdir "./Sdk/bin" -Force -Recurse -ErrorAction SilentlyContinue
-    rmdir "./Sdk/obj" -Force -Recurse -ErrorAction SilentlyContinue
-
-    dotnet nuget locals http-cache --clear | Out-Null
-
-    $project = @"
-<Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
-  </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="$id" Version="$version" />
-  </ItemGroup>
-</Project>
-"@
-
-    Set-Content -Path "./Sdk/Sdk.csproj" -Value $project
-
-    $restore = (dotnet restore "./Sdk/Sdk.csproj" --source $source.PackageSource --verbosity normal | Out-String).Trim()
-
-    if (-not ($restore.Contains("Build succeeded."))) { throw "Unexpected restore output: $restore "}
-
-    Set-Content -Path "./output/$envName-$clientName-restore-$id-$version.txt" -Value $restore -Force
-
-    if ($clientName -ne "dotnet31") {
-      $verify = (dotnet nuget verify --verbosity normal "$($env:UserProfile)/.nuget/packages/$id/$version/$id.$version.nupkg" | Out-String).Trim()
-
-      if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify "}
-
-      Set-Content -Path "./output/$envName-$clientName-verify-$id-$version.txt" -Value $verify -Force
-    }
+    Test-DotnetCli `
+      -TestName "$envName-$clientName" `
+      -SdkVersion $sdkVersion `
+      -SupportsVerifyCommand ($clientName -ne "dotnet31") `
+      -Id $_.PackageId `
+      -Version $_.PackageVersion
   }
 }
