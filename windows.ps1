@@ -28,13 +28,9 @@ Remove-Item "./output/*.txt"
 #         $nugetexe = "mono $nugetexe"
 #       }
 
-#       if ($addTrustedSigners) {
-#         $clientName = "$clientName-trustedSigners"
-#       }
-
 #       $source.Packages | % {
 #         Test-NuGetExe `
-#           -TestName "$envName-$clientName" `
+#           -TestName "windows-$envName-$clientName" `
 #           -NugetExe $nugetexe `
 #           -PackageSource $source.PackageSource `
 #           -AddTrustedSigners $addTrustedSigners `
@@ -54,7 +50,7 @@ $configs.DotnetClients | % {
 
     $source.Packages | % {
       Test-DotnetCli `
-        -TestName "$envName-$clientName" `
+        -TestName "windows-$envName-$clientName" `
         -SdkVersion $sdkVersion `
         -PackageSource $source.PackageSource `
         -AddTrustedSigners $addTrustedSigners `
