@@ -17,3 +17,11 @@ Now run:
 ```ps1
 .\Verify.ps1
 ```
+
+For Docker, run:
+
+```ps1
+docker run --rm -v D:\Code\VerifyPackageInstallation:/verify mcr.microsoft.com/dotnet/sdk:5.0 pwsh /verify/Hello.ps1
+```
+
+For more information on PowerShell in Docker, see [this](https://github.com/dotnet/dotnet-docker/issues/1069).
