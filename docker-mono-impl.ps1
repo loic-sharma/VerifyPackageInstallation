@@ -20,11 +20,14 @@ $nugetexe = "mono ./tools/$ClientName.exe"
   $addTrustedSigners = $_
 
   $source.Packages | % {
+    # The nuget.exe verify command is broken on Mono.
+    # See: https://github.com/NuGet/Home/issues/10585
     Test-NuGetExe `
       -TestName "docker-$envName-mono-$clientName" `
       -NugetExe $nugetexe `
       -PackageSource $source.PackageSource `
       -AddTrustedSigners $addTrustedSigners `
+      -SupportsVerifyCommand $false `
       -Id $_.PackageId `
       -Version $_.PackageVersion
   }

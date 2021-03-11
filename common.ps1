@@ -99,6 +99,7 @@ function Test-NuGetExe {
     $NugetExe,
     $PackageSource,
     $AddTrustedSigners,
+    $SupportsVerifyCommand,
     $Id,
     $Version
   )
@@ -130,13 +131,18 @@ function Test-NuGetExe {
 
   $identity = "$idLower.$versionLower"
   $restore = (Invoke-Expression "$NugetExe restore ./Legacy/Legacy.csproj -Source $PackageSource -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
-  $verify = (Invoke-Expression "$NugetExe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
 
   if (-not ($restore.Contains("Installed:") -and $restore.Contains("1 package(s) to packages.config projects"))) { throw "Unexpected restore output: $restore "}
-  if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
 
   Set-Content -Path "./output/$TestName-restore-$Id-$Version.txt" -Value $restore -Force
-  Set-Content -Path "./output/$TestName-verify-$Id-$Version.txt" -Value $verify -Force
+
+  if ($SupportsVerifyCommand) {
+    $verify = (Invoke-Expression "$NugetExe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
+
+    if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify" }
+
+    Set-Content -Path "./output/$TestName-verify-$Id-$Version.txt" -Value $verify -Force
+  }
 }
 
 function Test-DotnetCli {

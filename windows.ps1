@@ -54,6 +54,7 @@ $configs.NuGetClients | % {
         -NugetExe $nugetexe `
         -PackageSource $source.PackageSource `
         -AddTrustedSigners $addTrustedSigners `
+        -SupportsVerifyCommand $true `
         -Id $_.PackageId `
         -Version $_.PackageVersion
     }
