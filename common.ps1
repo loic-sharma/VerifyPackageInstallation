@@ -52,6 +52,18 @@ function Get-Configs {
   }
 }
 
+function Remove-PreviousTestItems {
+  Remove-Item "./output/*.txt"
+
+  if (Test-Path "global.json") {
+    Remove-Item "global.json"
+  }
+
+  if (Test-Path "nuget.config") {
+    Remove-Item "nuget.config"
+  }
+}
+
 $trustedSigners = @"
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>

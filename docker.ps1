@@ -1,14 +1,6 @@
 . (Join-Path $PSScriptRoot "common.ps1")
 
-Remove-Item "./output/*.txt"
-
-if (Test-Path "global.json") {
-  Remove-Item "global.json"
-}
-
-if (Test-Path "nuget.config") {
-  Remove-Item "nuget.config"
-}
+Remove-PreviousTestItems
 
 $configs = Get-Configs
 
