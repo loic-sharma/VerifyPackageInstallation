@@ -18,10 +18,14 @@ Now run:
 .\windows.ps1
 ```
 
-For Docker, run:
+For .NET CLI in Docker, run:
 
 ```ps1
-docker run --rm -v D:\Code\VerifyPackageInstallation:/verify -w /verify mcr.microsoft.com/dotnet/sdk:5.0 pwsh verify.ps1
+.\docker.ps1
 ```
 
-For more information on PowerShell in Docker, see [this](https://github.com/dotnet/dotnet-docker/issues/1069).
+For nuget.exe using Mono in Docker, run:
+
+```ps1
+.\docker-mono.ps1
+```
