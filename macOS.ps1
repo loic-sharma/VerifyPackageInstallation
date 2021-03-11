@@ -1,16 +1,14 @@
 . (Join-Path $PSScriptRoot "common.ps1")
 
-# Run test cases
-# ==============
-$envName = "DEV"
-$configs = Get-Configs
-$source = $configs.Sources.DEV
-
 if ($IsMacOS -eq $false) {
   throw "This script must be run on macOS"
 }
 
-Remove-Item "./output/*.txt"
+Remove-PreviousTestItems
+
+$envName = "DEV"
+$configs = Get-Configs
+$source = $configs.Sources.DEV
 
 # Mono restore was broken on macOS until nuget.exe v5.2 and newer.
 # See: https://github.com/nuget/nuget.client/pull/2826

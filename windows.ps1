@@ -1,14 +1,15 @@
 . (Join-Path $PSScriptRoot "common.ps1")
 
-# Run test cases
-# ==============
-$envName = "DEV"
-$configs = Get-Configs
-$source = $configs.Sources.DEV
-
 if ($IsWindows -eq $false) {
   throw "This script must be run on Windows"
 }
+
+
+Remove-PreviousTestItems
+
+$envName = "DEV"
+$configs = Get-Configs
+$source = $configs.Sources.DEV
 
 $configs.NuGetClients | % {
   $clientName = $_
