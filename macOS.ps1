@@ -6,24 +6,28 @@ $envName = "DEV"
 $configs = Get-Configs
 $source = $configs.Sources.DEV
 
-if ($IsWindows -eq $false) {
-  throw "This script must be run on Windows"
+if ($IsMacOS -eq $false) {
+  throw "This script must be run on macOS"
 }
+
+Remove-Item "./output/*.txt"
 
 $configs.NuGetClients | % {
   $clientName = $_
-  $nugetexe = "./tools/$clientName.exe"
+  $nugetexe = "mono ./tools/$clientName.exe"
 
   @($true, $false) | % {
     $addTrustedSigners = $_
 
     $source.Packages | % {
+    # The nuget.exe verify command is broken on Mono.
+    # See: https://github.com/NuGet/Home/issues/10585
       Test-NuGetExe `
-        -TestName "windows-$envName-$clientName" `
+        -TestName "macos-$envName-mono-$clientName" `
         -NugetExe $nugetexe `
         -PackageSource $source.PackageSource `
         -AddTrustedSigners $addTrustedSigners `
-        -SupportsVerifyCommand $true `
+        -SupportsVerifyCommand $false `
         -Id $_.PackageId `
         -Version $_.PackageVersion
     }
@@ -39,7 +43,7 @@ $configs.DotnetClients | % {
 
     $source.Packages | % {
       Test-DotnetCli `
-        -TestName "windows-$envName-$clientName" `
+        -TestName "macos-$envName-$clientName" `
         -SdkVersion $sdkVersion `
         -PackageSource $source.PackageSource `
         -AddTrustedSigners $addTrustedSigners `
