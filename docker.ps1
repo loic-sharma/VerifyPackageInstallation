@@ -10,13 +10,15 @@ if (Test-Path "nuget.config") {
   Remove-Item "nuget.config"
 }
 
-#@("3.1", "5.0") | % {
-@("5.0") | % {
-    $sdkVersion = $_
+$configs = Get-Configs
 
-    docker run --rm `
-        -v D:\Code\VerifyPackageInstallation:/verify `
-        -w /verify `
-        mcr.microsoft.com/dotnet/sdk:$sdkVersion `
-        pwsh docker-impl.ps1 -ClientName "dotnet50"
+$configs.DotnetClients | % {
+  $dockerTag = $_.DockerTag
+  $clientName = $_.Name
+
+  docker run --rm `
+    -v D:\Code\VerifyPackageInstallation:/verify `
+    -w /verify `
+    mcr.microsoft.com/dotnet/sdk:$dockerTag `
+    pwsh docker-impl.ps1 -ClientName $clientName
 }

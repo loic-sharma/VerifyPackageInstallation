@@ -5,8 +5,8 @@ function Get-Configs {
     NuGetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581");
 
     DotnetClients = @(
-      @{ Name = "dotnet31"; Version = "3.1.302"; },
-      @{ Name = "dotnet50"; Version = "5.0.103"; }
+      @{ Name = "dotnet31"; Version = "3.1.302"; DockerTag = "3.1" },
+      @{ Name = "dotnet50"; Version = "5.0.103"; DockerTag = "5.0" }
     );
 
     Sources = @{
