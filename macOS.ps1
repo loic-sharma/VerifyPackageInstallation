@@ -12,7 +12,10 @@ if ($IsMacOS -eq $false) {
 
 Remove-Item "./output/*.txt"
 
-$configs.NuGetClients | % {
+# Mono restore was broken on macOS until nuget.exe v5.2 and newer.
+# See: https://github.com/nuget/nuget.client/pull/2826
+#$configs.NuGetClients | % {
+@("nuget581") | % {
   $clientName = $_
   $nugetexe = "mono ./tools/$clientName.exe"
 
