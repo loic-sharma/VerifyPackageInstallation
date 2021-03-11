@@ -15,8 +15,8 @@ function Get-Configs {
 
         Packages      = @(
           @{ PackageId = "Newtonsoft.Json"; PackageVersion = "12.0.1"; } # Old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.3.11-v0131008266965"; } # Author signed + new repo cert
+          @{ PackageId = "e2e.semver2prerelrelisted.210311.013449.9957645"; PackageVersion = "1.0.0-alpha.1"; } # New repo cert
           @{ PackageId = "Microsoft.Bcl.AsyncInterfaces"; PackageVersion = "6.0.0-preview.1.21102.12"; } # Author signed + old repo cert
           @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2020.9.7-v0835112820328"; } # Expired MSFT author signed + old repo cert
           @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
@@ -63,7 +63,7 @@ $trustedSigners = @"
     <repository name="DEV" serviceIndex="https://apidev.nugettest.org/v3/index.json">
       <certificate fingerprint="CF6CE6768EF858A3A667BE1AF8AA524D386C7F59A34542713F5DFB0D79ACF3DD" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
       <certificate fingerprint="BA5A630994B2B8F562B307A2A3245998232EF0A94EE80BECE5CEA0B5CECA61F9" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
-      <owners>microsoft;aspnet;nuget;loshar;jamesnk;jver</owners>
+      <owners>NugetTestAccount;microsoft;aspnet;nuget;loshar;jamesnk;jver;zhhyu</owners>
     </repository>
     <repository name="INT" serviceIndex="https://apiint.nugettest.org/v3/index.json">
       <certificate fingerprint="CF6CE6768EF858A3A667BE1AF8AA524D386C7F59A34542713F5DFB0D79ACF3DD" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
@@ -91,7 +91,11 @@ function Test-NuGetExe {
     $Version
   )
 
-  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
+  $nugetDir = if ($IsWindows -eq $false) { $home } else { $env:UserProfile }
+  $idLower = $Id.ToLower()
+  $versionLower = $Version.ToLower()
+
+  Remove-Item "$nugetDir/.nuget/packages/$idLower" -Force -Recurse -ErrorAction SilentlyContinue
   Remove-Item "./packages" -Force -Recurse -ErrorAction SilentlyContinue
 
   Invoke-Expression "$NugetExe locals http-cache -clear -Verbosity quiet"
@@ -112,7 +116,7 @@ function Test-NuGetExe {
 
   Set-Content -Path "./Legacy/packages.config" -Value $packagesConfig
 
-  $identity = "$Id.$Version"
+  $identity = "$idLower.$versionLower"
   $restore = (Invoke-Expression "$NugetExe restore ./Legacy/Legacy.csproj -Source $PackageSource -PackagesDirectory packages -Verbosity detailed" | Out-String).Trim()
   $verify = (Invoke-Expression "$NugetExe verify -All -Verbosity detailed ""./packages/$identity/$identity.nupkg""" | Out-String).Trim()
 
@@ -135,7 +139,11 @@ function Test-DotnetCli {
   )
 
   # Clean up any state.
-  Remove-Item "$($env:UserProfile)/.nuget/packages/$Id" -Force -Recurse -ErrorAction SilentlyContinue
+  $nugetDir = if ($IsWindows -eq $false) { $home } else { $env:UserProfile }
+  $idLower = $Id.ToLower()
+  $versionLower = $Version.ToLower()
+
+  Remove-Item "$nugetDir/.nuget/packages/$idLower" -Force -Recurse -ErrorAction SilentlyContinue
   Remove-Item "./Sdk/bin" -Force -Recurse -ErrorAction SilentlyContinue
   Remove-Item "./Sdk/obj" -Force -Recurse -ErrorAction SilentlyContinue
 
@@ -149,7 +157,9 @@ function Test-DotnetCli {
   }
 
   # Lock down the SDK version
-  dotnet new globaljson --sdk-version $SdkVersion --force | Out-Null
+  if ($null -ne $SdkVersion) {
+    dotnet new globaljson --sdk-version $SdkVersion --force | Out-Null
+  }
 
   # Create a project to restore and verify.
   $project = @"
@@ -173,7 +183,7 @@ function Test-DotnetCli {
   Set-Content -Path "./output/$TestName-restore-$Id-$Version.txt" -Value $restore -Force
 
   if ($SupportsVerifyCommand) {
-    $verify = (dotnet nuget verify --verbosity normal "$($env:UserProfile)/.nuget/packages/$Id/$Version/$Id.$Version.nupkg" | Out-String).Trim()
+    $verify = (dotnet nuget verify --verbosity normal "$nugetDir/.nuget/packages/$idLower/$versionLower/$idLower.$versionLower.nupkg" | Out-String).Trim()
 
     if (-not ($verify.Contains("Successfully verified package"))) { throw "Unexpected verify output: $verify "}
 

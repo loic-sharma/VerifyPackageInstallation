@@ -41,6 +41,25 @@ Remove-Item "./output/*.txt"
 #   }
 # }
 
+$configs.NuGetClients | % {
+  $clientName = $_
+  $nugetexe = "./tools/$clientName.exe"
+
+  @($true, $false) | % {
+    $addTrustedSigners = $_
+
+    $source.Packages | % {
+      Test-NuGetExe `
+        -TestName "windows-$envName-$clientName" `
+        -NugetExe $nugetexe `
+        -PackageSource $source.PackageSource `
+        -AddTrustedSigners $addTrustedSigners `
+        -Id $_.PackageId `
+        -Version $_.PackageVersion
+    }
+  }
+}
+
 $configs.DotnetClients | % {
   $clientName = $_.Name
   $sdkVersion = $_.Version
