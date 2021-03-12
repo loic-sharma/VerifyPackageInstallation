@@ -6,9 +6,9 @@ param (
 
 # Run test cases
 # ==============
-$envName = "DEV"
+$envName = Get-EnvName
 $configs = Get-Configs
-$source = $configs.Sources.DEV
+$source = Get-PackageSource $configs
 
 if ($env:DOTNET_RUNNING_IN_CONTAINER -ne "true") {
   throw "This script must run in Docker. Run docker.ps1 instead."

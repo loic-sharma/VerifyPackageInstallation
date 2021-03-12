@@ -2,15 +2,15 @@
 
 # Run test cases
 # ==============
-$envName = "DEV"
+$envName = Get-EnvName
 $configs = Get-Configs
-$source = $configs.Sources.DEV
+$source = Get-PackageSource $configs
 
 if ($IsMacOS -eq $false) {
   throw "This script must be run on macOS"
 }
 
-Remove-Item "./output/*.txt"
+Remove-PreviousTestItems
 
 $configs.NuGetClients | % {
   $clientName = $_

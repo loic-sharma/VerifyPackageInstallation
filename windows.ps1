@@ -2,13 +2,15 @@
 
 # Run test cases
 # ==============
-$envName = "DEV"
+$envName = Get-EnvName
 $configs = Get-Configs
-$source = $configs.Sources.DEV
+$source = Get-PackageSource $configs
 
 if ($IsWindows -eq $false) {
   throw "This script must be run on Windows"
 }
+
+Remove-PreviousTestItems
 
 $configs.NuGetClients | % {
   $clientName = $_

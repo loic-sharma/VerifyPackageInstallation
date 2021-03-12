@@ -1,5 +1,15 @@
 # Configs
 # =======
+function Get-EnvName {
+  return "INT" # If you change this, also update Get-PackageSource
+}
+
+function Get-PackageSource {
+  param ($configs)
+
+  return $configs.Sources.INT # IF you change this, also update Get-EnvName
+}
+
 function Get-Configs {
   return @{
     NuGetClients = @("nuget464", "nuget473", "nuget494", "nuget502", "nuget581");
@@ -27,12 +37,12 @@ function Get-Configs {
         PackageSource = "https://apiint.nugettest.org/v3/index.json";
 
         Packages      = @(
-          # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Expired MSFT author signed + old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Expired non-MSFT author signed + old repo cert
+          @{ PackageId = "E2E.SemVer2PrerelRelisted.170731.232442.2957737"; PackageVersion = "1.0.0-alpha.1"; } # Old repo cert
+          @{ PackageId = "Eliz.Teste.Shared"; PackageVersion = "1.0.0"; } # New repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.1.28-v0109274632593"; } # Author signed + old repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.3.11-v0632016654790"; } # Author signed + new repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2020.10.13-v0008197999550"; } # Expired MSFT author signed + old repo cert
+          @{ PackageId = "System.Rido"; PackageVersion = "1.0.1"; } # Expired non-MSFT author signed + old repo cert
         )
       };
 
@@ -80,7 +90,7 @@ $trustedSigners = @"
     <repository name="INT" serviceIndex="https://apiint.nugettest.org/v3/index.json">
       <certificate fingerprint="CF6CE6768EF858A3A667BE1AF8AA524D386C7F59A34542713F5DFB0D79ACF3DD" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
       <certificate fingerprint="BA5A630994B2B8F562B307A2A3245998232EF0A94EE80BECE5CEA0B5CECA61F9" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
-      <owners>microsoft;aspnet;nuget;loshar;jamesnk</owners>
+      <owners>microsoft;aspnet;nuget;loshar;sharma.loic;jamesnk;calegari.li</owners>
     </repository>
     <repository name="nuget.org" serviceIndex="https://api.nuget.org/v3/index.json">
       <certificate fingerprint="0E5F38F57DC1BCC806D8494F4F90FBCEDD988B46760709CBEEC6F4219AA6157D" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
