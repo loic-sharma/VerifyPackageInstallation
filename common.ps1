@@ -1,13 +1,13 @@
 # Configs
 # =======
 function Get-EnvName {
-  return "INT" # If you change this, also update Get-PackageSource
+  return "PROD" # If you change this, also update Get-PackageSource
 }
 
 function Get-PackageSource {
   param ($configs)
 
-  return $configs.Sources.INT # IF you change this, also update Get-EnvName
+  return $configs.Sources.PROD # IF you change this, also update Get-EnvName
 }
 
 function Get-Configs {
@@ -50,9 +50,9 @@ function Get-Configs {
         PackageSource = "https://api.nuget.org/v3/index.json";
 
         Packages      = @(
-          # @{ PackageId = ""; PackageVersion = ""; } # Old repo cert
+          @{ PackageId = "BaGet.Protocol"; PackageVersion = "0.3.0-preview4"; } # Old repo cert
           # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + old repo cert
+          @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.3.12-v0231330040922"; } # Author signed + old repo cert
           # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
           @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
           @{ PackageId = "postsharp.patterns.common.redist"; PackageVersion = "6.3.6-preview"; } # Expired non-MSFT author signed + old repo cert
