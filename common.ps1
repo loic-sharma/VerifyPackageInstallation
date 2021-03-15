@@ -51,7 +51,7 @@ function Get-Configs {
 
         Packages      = @(
           @{ PackageId = "BaGet.Protocol"; PackageVersion = "0.3.0-preview4"; } # Old repo cert
-          @{ PackageId = "https://www.nuget.org/packages/Loshar.TestPackage.ProdRepoSigned"; PackageVersion = "1.0.0"; } # New repo cert
+          @{ PackageId = "Loshar.TestPackage.ProdRepoSigned"; PackageVersion = "1.0.0"; } # New repo cert
           @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.3.12-v0231330040922"; } # Author signed + old repo cert
           @{ PackageId = "Loshar.TestPackage.ProdRepoSignedAndAuthorSigned"; PackageVersion = "1.0.0"; } # Author signed + new repo cert
           @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
