@@ -51,9 +51,9 @@ function Get-Configs {
 
         Packages      = @(
           @{ PackageId = "BaGet.Protocol"; PackageVersion = "0.3.0-preview4"; } # Old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # New repo cert
+          @{ PackageId = "https://www.nuget.org/packages/Loshar.TestPackage.ProdRepoSigned"; PackageVersion = "1.0.0"; } # New repo cert
           @{ PackageId = "E2E.SignedPackage"; PackageVersion = "2021.3.12-v0231330040922"; } # Author signed + old repo cert
-          # @{ PackageId = ""; PackageVersion = ""; } # Author signed + new repo cert
+          @{ PackageId = "Loshar.TestPackage.ProdRepoSignedAndAuthorSigned"; PackageVersion = "1.0.0"; } # Author signed + new repo cert
           @{ PackageId = "Microsoft.Extensions.DependencyInjection.Abstractions"; PackageVersion = "5.0.0"; } # Expired MSFT author signed + old repo cert
           @{ PackageId = "postsharp.patterns.common.redist"; PackageVersion = "6.3.6-preview"; } # Expired non-MSFT author signed + old repo cert
         )
@@ -95,7 +95,7 @@ $trustedSigners = @"
     <repository name="nuget.org" serviceIndex="https://api.nuget.org/v3/index.json">
       <certificate fingerprint="0E5F38F57DC1BCC806D8494F4F90FBCEDD988B46760709CBEEC6F4219AA6157D" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
       <certificate fingerprint="5A2901D6ADA3D18260B9C6DFE2133C95D74B9EEF6AE0E5DC334C8454D1477DF4" hashAlgorithm="SHA256" allowUntrustedRoot="false" />
-      <owners>microsoft;aspnet;nuget;loshar;jamesnk</owners>
+      <owners>microsoft;aspnet;nuget;loshar;jamesnk;BaGet;PostSharp</owners>
     </repository>
   </trustedSigners>
 </configuration>
